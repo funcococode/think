@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card } from "../ui/card";
 import DisplayPicture from "../DisplayPicture";
 import { useRouter } from "next/router";
+import { CONSTANTS } from "fe_constants";
 
 interface FollowersAnalyticsCardProps{
     count: number,
@@ -52,13 +53,15 @@ export default function FollowersCount({count, followers, isMine}: FollowersAnal
                 </AlertDialogTitle>
                 <AlertDialogDescription>
                     <ScrollArea className="w-full py-4 h-80">
-                        {followers?.map(follower => <AlertDialogCancel className="justify-stretch w-full p-0 flex h-16 border-none shadow-none hover:bg-transparent"  key={follower?.id} ><Card onClick={() => void router.push(`${follower?.id}`)} className="flex-1 flex gap-3 items-center p-2 border-none shadow-none">
+                        {followers?.map(follower => <AlertDialogCancel className="justify-stretch w-full p-0 flex h-16 border-none shadow-none hover:bg-transparent"  key={follower?.id} >
+                            <Card onClick={() => void router.push(`${CONSTANTS?.SOCIAL_URL}/${follower?.id}`)} className="flex-1 flex gap-3 items-center p-2 border-none shadow-none">
                             <DisplayPicture src={follower?.image} fallbackText={follower?.name}/>
                             <div className="flex justify-between items-center flex-1">
                                 <div>
                                     <p className="font-bold text-slate-800 text-left">{follower?.name}</p>
                                     <p className="text-slate-400">{follower?.email}</p>
                                 </div>
+                                {/* {(session?.user?.id === following?.id) && <Button variant="destructive" size='sm'>remove</Button>} */}
                             </div>
                         </Card></AlertDialogCancel>)}
                     </ScrollArea>

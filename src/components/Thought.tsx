@@ -19,6 +19,7 @@ import Link from 'next/link';
 import DisplayPicture from './DisplayPicture';
 import ThoughtHeaderControls from './ThoughtHeaderControls';
 import CommentSection from './CommentSection';
+import { CONSTANTS } from 'fe_constants';
 interface ThoughtPropsType{
     thought: Thought,
     refetch?: <TPageData>(options?: (RefetchOptions & RefetchQueryFilters<TPageData>) | undefined) => Promise<QueryObserverResult<void | {
@@ -97,7 +98,7 @@ export default function Thought({thought, refetch} : ThoughtPropsType) {
     return (
         <Card className='shadow-none divide-y'>
             <CardHeader className='flex flex-row items-center gap-3 py-4 space-y-0'>
-                <Link href={`home/${thought?.user?.id}`}>
+                <Link href={`${CONSTANTS?.SOCIAL_URL}/${thought?.user?.id}`}>
                     <DisplayPicture  fallbackText={thought?.user?.name} src={thought?.user?.image ? thought?.user?.image : ''} />
                 </Link>
                 <div className='flex w-full justify-between'>

@@ -14,6 +14,8 @@ import { Card } from "../ui/card";
 import DisplayPicture from "../DisplayPicture";
 import { useRouter } from "next/router";
 import { Button } from "../ui/button";
+import { useSession } from "next-auth/react";
+import { CONSTANTS } from "fe_constants";
 interface FollowingsAnalyticsCardProps{
     count: number, 
     following: {
@@ -27,6 +29,8 @@ interface FollowingsAnalyticsCardProps{
 
 export default function FollowingsCount({count, following, isMine}: FollowingsAnalyticsCardProps) {
     const router = useRouter();
+    const {data:session} = useSession();
+
     return <AlertDialog>
         <AlertDialogTrigger className="flex-1">
             <div className="bg-white p-3 rounded border hover:border-slate-500">
@@ -52,16 +56,17 @@ export default function FollowingsCount({count, following, isMine}: FollowingsAn
                 </AlertDialogTitle>
                 <AlertDialogDescription>
                     <ScrollArea className="w-full py-4 h-80 ">
-                        {following?.map(following => <AlertDialogCancel className="justify-stretch w-full p-0 flex h-16 border-none shadow-none hover:bg-transparent"  key={following?.id} ><Card onClick={() => void router.push(`${following?.id}`)} className="flex-1 flex gap-3 items-center p-2 border-none shadow-none">
+                        {following?.map(following => <div className="justify-stretch w-full p-0 flex h-16 border-none shadow-none hover:bg-transparent"  key={following?.id} >
+                            <Card onClick={() => void router.push(`${CONSTANTS?.SOCIAL_URL}/${following?.id}`)} className="flex-1 flex gap-3 items-center p-2 border-none shadow-none">
                             <DisplayPicture src={following?.image} fallbackText={following?.name}/>
                             <div className="flex justify-between items-center flex-1">
-                                <div>
+                                <AlertDialogCancel style={{all: 'unset'}}>
                                     <p className="font-bold text-slate-800 text-left">{following?.name}</p>
                                     <p className="text-slate-400">{following?.email}</p>
-                                </div>
-                                <Button variant="destructive" size='sm'>remove</Button>
+                                </AlertDialogCancel>
+                                {isMine && <Button variant="destructive" size='sm'>remove</Button>}
                             </div>
-                        </Card></AlertDialogCancel>)}
+                        </Card></div>)}
                     </ScrollArea>
                 </AlertDialogDescription>
             </AlertDialogHeader>

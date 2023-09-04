@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { z } from "zod";
+import { number, z } from "zod";
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -51,7 +51,13 @@ export const notificationRouter = createTRPCRouter({
                         image: true
                     }
                 },
-                createdAt: true
+                createdAt: true,
+                _count: {
+                    select:{
+                        comment: true,
+                        like: true,
+                    }
+                }
             },
             orderBy: {
                 createdAt: 'desc'
@@ -64,31 +70,24 @@ export const notificationRouter = createTRPCRouter({
         return result;
     }),
 
-//   find: protectedProcedure
-//     .input(z.object({ query: z.string().trim()}))
-//     .query(async ({ctx, input }) => {
-//       const result = await ctx.prisma.user.findMany({
-//         where: {
-//           name:{
-//             startsWith: input?.query
-//           },
-//           id: {
-//             not: {
-//               equals: ctx?.session?.user?.id
-//             }
-//           }
-//         },
-//         select: {
-//           id: true,
-//           name: true,
-//           email: true
-//         },
-//         take: 10
-//       }).catch(err => {
-//         console.log(err);
-//       })
-//       return result
-//   }),
+  markRead: protectedProcedure
+    .input(z.object({ notifId: z.string().array()}))
+    .mutation(async ({ctx, input }) => {
+      await ctx.prisma.notification.updateMany({
+        where: {
+            id: {
+                in: input.notifId
+            }
+        },
+        data: {
+            seen: true
+        }
+      }).catch(err => {
+        console.log(err);
+        return {markRead: false};
+      })
+      return {markRead: true};
+  }),
   
 });
 

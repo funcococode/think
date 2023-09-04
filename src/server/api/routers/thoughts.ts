@@ -73,7 +73,7 @@ export const thoughtsRouter = createTRPCRouter({
             thoughtId: input?.thoughtId,
             userId: ctx.session?.user?.id
           }
-        }
+        },
       });
       const thoughtBy = await ctx?.prisma?.thoughts?.findFirst({
         where: {
@@ -122,6 +122,26 @@ export const thoughtsRouter = createTRPCRouter({
           console.log(err);
         })
 
+        const notifId = await ctx.prisma.notification.findFirst({
+          where: {
+            userId: thoughtBy?.userId ?? '',
+            senderId: ctx?.session?.user?.id,
+          },
+          select: {
+            id: true
+          }
+        });
+        if(notifId){
+          await ctx.prisma.notification.delete({
+            where:{
+              id: notifId?.id
+            }
+          }).catch(err => console.log(err));
+  
+          await pusher.trigger(thoughtBy?.userId ?? '', "le", {
+            type: 'like',
+          });
+        }
         return {likeAdded: false}
       }
       

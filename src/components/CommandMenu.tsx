@@ -18,11 +18,20 @@ import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import Link from "next/link";
 import { Button } from "./ui/button";
+import DisplayPicture from "./DisplayPicture";
+import { useRouter } from "next/router";
+import { CONSTANTS } from "../../fe_constants";
 
 interface SearchResultProps{
+  image: string | null;
+  id: string;
   name: string | null;
   email: string | null;
-  id: string;
+  _count: {
+      thoughts: number;
+      followers: number;
+      follows: number;
+  };
 }
 
 export function CommandMenu() {
@@ -30,6 +39,7 @@ export function CommandMenu() {
   const [searchResult, setSearchResult] = useState<SearchResultProps[] | void | []>([]);
   const [searchType, setSearchType] = useState('philosophers');
   const [commandOpen, setCommandOpen] = useState(false);
+  const router = useRouter();
 
     useEffect(() => {
       const down = (ev: KeyboardEvent<Element>) => {
@@ -53,7 +63,7 @@ export function CommandMenu() {
       setQuery(value);
     }
     useEffect(() =>{
-      if(searchType === 'users'){
+      // if(searchType === 'users'){
         if(query === ''){
           setSearchResult([]);
         }else{
@@ -63,7 +73,7 @@ export function CommandMenu() {
               console.log(err)
             })
         }
-      }
+      // }
     },[query]);
     
     return (
@@ -80,7 +90,7 @@ export function CommandMenu() {
         <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
           <CommandGroup>
             <div className="flex divide-x-4">
-              <Select onValueChange={setSearchType} defaultValue="philosophers">
+              <Select onValueChange={setSearchType} >
                 <SelectTrigger className="w-48 gap-2 border-none shadow-none rounded-none">
                   <SelectValue placeholder="Search for" />
                 </SelectTrigger>
@@ -89,7 +99,7 @@ export function CommandMenu() {
                   <SelectItem value="users">Users</SelectItem>
                 </SelectContent>
               </Select>
-              <Input onChange={(e) => handleChange(e)} placeholder="Type your search here" className="border-none rounded-none shadow-none"/>
+              <Input autoFocus onChange={(e) => handleChange(e)} placeholder="Type your search here" className="border-none rounded-none shadow-none"/>
             </div>
           </CommandGroup>
           <CommandSeparator />
@@ -97,10 +107,23 @@ export function CommandMenu() {
             <h3 className="pl-3 font-medium text-sm py-3 text-slate-400 flex items-center gap-2">
               Results {isFetching && <TbLoader3 className="animate-spin duration-[2000]"/>}
             </h3>
-            <ScrollArea className="max-h-64 w-full">
-              {searchResult?.length != 0 && searchResult?.map(item => <Link href={`${item?.id}`} key={item?.id} className="cursor-pointer">
-                <CommandItem>
-                  {item?.name}
+            <ScrollArea className="max-h-64 w-full px-3">
+              {searchResult?.length != 0 && searchResult?.map(item => <Link href={`${CONSTANTS?.SOCIAL_URL}/${item?.id}`} key={item?.id} className="cursor-pointer bg-red-100 hover:bg-transparent">
+                <CommandItem onClickCapture={() => setCommandOpen(false)} className="flex gap-3 items-center">
+                  <DisplayPicture fallbackText={item?.name} src={item?.image}/>
+                  <div className="space-y-1">
+                    <h1 className="text-sm font-semibold">
+                      {item?.name}
+                    </h1>
+                    <p className='flex gap-3 items-center text-gray-400 text-xs'>
+                      <span>
+                        {item?._count?.followers} followers
+                      </span>
+                      <span>
+                        {item?._count?.follows} followings
+                      </span>
+                    </p>
+                  </div>
                 </CommandItem>
               </Link>)}
             </ScrollArea>

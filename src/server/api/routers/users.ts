@@ -97,16 +97,19 @@ export const usersRouter = createTRPCRouter({
           name:{
             startsWith: input?.query
           },
-          id: {
-            not: {
-              equals: ctx?.session?.user?.id
-            }
-          }
         },
         select: {
           id: true,
           name: true,
-          email: true
+          email: true,
+          image: true,
+          _count: {
+            select: {
+              followers: true,
+              follows: true,
+              thoughts: true
+            }
+          }
         },
         take: 10
       }).catch(err => {
@@ -154,7 +157,6 @@ export const usersRouter = createTRPCRouter({
 
         await pusher.trigger(input?.userId, "fe", {
           type: 'follow',
-          user: ctx?.session?.user
         });
 
         return {followed: true}
@@ -172,7 +174,28 @@ export const usersRouter = createTRPCRouter({
           }
         }).catch(err => {
           console.log(err);
-        })
+        });
+
+        const notifId = await ctx.prisma.notification.findFirst({
+          where: {
+            userId: input?.userId,
+            senderId: ctx?.session?.user?.id
+          },
+          select: {
+            id: true
+          }
+        });
+        if(notifId){
+          await ctx.prisma.notification.delete({
+            where:{
+              id: notifId?.id
+            }
+          }).catch(err => console.log(err));
+  
+          await pusher.trigger(input?.userId, "fe", {
+            type: 'follow',
+          });
+        }
 
         return {followed: false}
       }

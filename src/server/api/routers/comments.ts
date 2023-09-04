@@ -6,6 +6,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "@/server/api/trpc";
+import pusher from "@/utils/pusher";
 
 export const commentsRouter = createTRPCRouter({
   create: protectedProcedure
@@ -19,10 +20,37 @@ export const commentsRouter = createTRPCRouter({
           userId: ctx.session?.user?.id,
           thoughtId: input?.thoughtId,
           comment: input?.comment,
-        }
+        },
       }).catch(err => {
         console.log(err);
-      })
+      });
+      const thoughtBy = await ctx?.prisma?.thoughts?.findFirst({
+        where: {
+          id: input?.thoughtId
+        },
+        select: {
+          userId: true
+        }
+      });
+      if(ctx?.session?.user?.id !== thoughtBy?.userId){
+        console.log('FUCKKKKKK')
+        await ctx.prisma.notification.create ({
+          data: {
+            type: 'comment',
+            userId: thoughtBy?.userId ?? '',
+            senderId: ctx?.session?.user?.id,
+            thoughtId: input?.thoughtId,
+            commentId: result?.id
+          }
+        }).catch(err => console.log(err));
+
+        await pusher.trigger(thoughtBy?.userId ?? '', "ce", {
+          type: 'comment',
+          user: ctx?.session?.user
+        });
+
+        
+      }
       return result
   }),
 
@@ -33,10 +61,22 @@ export const commentsRouter = createTRPCRouter({
       const result = await ctx.prisma.comment.delete({
         where: {
           id: input?.commentId
+        },
+        select: {
+          thought:{
+            select: {
+              userId: true
+            }
+          }
         }
       }).catch(err => {
         console.log(err);
-      })
+      });
+
+      await pusher.trigger(result?.thought?.userId ?? '', "ce", {
+        type: 'comment',
+        user: ctx?.session?.user
+      });
       return result
   }),
 

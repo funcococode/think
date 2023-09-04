@@ -8,6 +8,8 @@ import { ScrollArea } from "./ui/scroll-area";
 import moment from "moment";
 import { LiaClock } from "react-icons/lia";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
+import { CONSTANTS } from "fe_constants";
 
 interface CommentSectionProps{
     thoughtId: string, 
@@ -19,10 +21,11 @@ export default function CommentSection({thoughtId}: CommentSectionProps){
     const {data: comments, isLoading, refetch} = api?.commentsRouter?.getAll?.useQuery({thoughtId},{
         refetchOnWindowFocus: false
     })
-    const addHandler = api?.commentsRouter?.create?.useMutation({});
+    const {mutateAsync:addHandler, isLoading:isAdding} = api?.commentsRouter?.create?.useMutation({});
     const deleteHandler = api?.commentsRouter?.delete?.useMutation({});
+    const router = useRouter();
     async function add(){
-        await addHandler?.mutateAsync({
+        await addHandler({
             thoughtId,
             comment: newComment
         }).catch(err => {
@@ -40,7 +43,7 @@ export default function CommentSection({thoughtId}: CommentSectionProps){
     return <>
         <div className="flex w-full items-center justi space-x-2">
             <Input value={newComment} onChange={(e) => setNewComment(e.target.value)} type="text" placeholder="Share your views on this thought" className='flex-1'/>
-            <Button onClick={() => void add()} type="submit" className="shadow-none border-none flex items-center gap-2 bg-teal-50 hover:bg-teal-100 text-teal-500">
+            <Button disabled={isAdding} onClick={() => void add()} type="submit" className="shadow-none border-none flex items-center gap-2 bg-teal-50 hover:bg-teal-100 text-teal-500">
                 <TbMessageCircle2Filled /> Add
             </Button>
         </div>
@@ -49,7 +52,7 @@ export default function CommentSection({thoughtId}: CommentSectionProps){
             {!isLoading && !comments?.length && <p className="text-center text-sm text-slate-400">Be the first one to comment</p>}
             {isLoading && 'Loading...'}
             {
-                comments?.length !== 0 && comments?.map(comment => <div key={comment?.id} className="group flex items-center gap-2 mb-5 last:mb-0">
+                comments?.length !== 0 && comments?.map(comment => <div onClick={() => void router.push(`${CONSTANTS?.SOCIAL_URL}/${comment?.user?.id}`)} key={comment?.id} className="group flex items-center gap-2 mb-5 last:mb-0">
                     <div>
                         <DisplayPicture src={comment?.user?.image} fallbackText={comment?.user?.name}/>
                     </div>
